@@ -1,0 +1,95 @@
+benchmark_commit: 210e632479664bdabaa9397d548a2955b990c19b
+benchmark_timestamp_utc: 2026-09-19T19:13:59Z
+aws_account: 500888846380
+eks_cluster: vectoramp-dev
+kubernetes_node: ip-10-1-39-140.us-west-2.compute.internal
+instance_type: r6id.2xlarge
+pod: vectoramp-services/va-shared-pool-21-0
+pinned_cpu: 3
+sibling_cpu: 7
+iterations_per_case_per_run: 3000000
+runs: 10
+
+Linux va-shared-pool-21-0 6.12.103-127.188.amzn2023.x86_64 #1 SMP PREEMPT_DYNAMIC Tue Aug 25 15:42:53 UTC 2026 x86_64 Linux
+
+CPU INFO
+processor	: 0
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 106
+model name	: Intel(R) Xeon(R) Platinum 8375C CPU @ 2.90GHz
+stepping	: 6
+microcode	: 0xd000433
+cpu MHz		: 3490.418
+cache size	: 55296 KB
+physical id	: 0
+siblings	: 8
+core id		: 0
+cpu cores	: 4
+apicid		: 0
+initial apicid	: 0
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 27
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch cpuid_fault ssbd ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves wbnoinvd ida arat avx512vbmi pku ospke avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg tme avx512_vpopcntdq rdpid md_clear flush_l1d arch_capabilities
+bugs		: spectre_v1 spectre_v2 spec_store_bypass swapgs mmio_stale_data eibrs_pbrsb gds bhi its its_native_only
+bogomips	: 5799.80
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 46 bits physical, 48 bits virtual
+power management:
+
+processor	: 1
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 106
+model name	: Intel(R) Xeon(R) Platinum 8375C CPU @ 2.90GHz
+stepping	: 6
+microcode	: 0xd000433
+cpu MHz		: 3506.516
+
+TOPOLOGY
+/sys/devices/system/cpu/cpu0/topology/thread_siblings_list 0,4
+/sys/devices/system/cpu/cpu1/topology/thread_siblings_list 1,5
+/sys/devices/system/cpu/cpu2/topology/thread_siblings_list 2,6
+/sys/devices/system/cpu/cpu3/topology/thread_siblings_list 3,7
+/sys/devices/system/cpu/cpu4/topology/thread_siblings_list 0,4
+/sys/devices/system/cpu/cpu5/topology/thread_siblings_list 1,5
+/sys/devices/system/cpu/cpu6/topology/thread_siblings_list 2,6
+/sys/devices/system/cpu/cpu7/topology/thread_siblings_list 3,7
+
+FREQUENCY
+
+CGROUP
+0-7
+
+COMPILER
+c++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0
+
+BINARY SHA256
+888af1197f6e24f462d7214a2c8ee921903a7f8f48d3fe3c27362d2e78e6c2b5  /tmp/vectoramp-kernel-bench-static
+eaecb9a35887e87332e14fee74eb456ce6e4c980fb71c53dcf178e215cf43058  /tmp/vectoramp-kernel-tests-static
+84eb921ac0271413bc9e230807b0e14b8cad6d06a4089a871225d6db99adceec  /tmp/benchmark-affinity-static
+
+DISASSEMBLY PROOF
+  406280:	c4 e2 7d b8 c8       	vfmadd231ps ymm1,ymm0,ymm0
+  406460:	62 f1 7c 48 10 6c 87 	vmovups zmm5,ZMMWORD PTR [rdi+rax*4-0x40]
+  406468:	62 f1 54 48 5c 44 81 	vsubps zmm0,zmm5,ZMMWORD PTR [rcx+rax*4-0x40]
+  406474:	62 f2 7d 48 b8 c8    	vfmadd231ps zmm1,zmm0,zmm0
+  40648b:	62 f3 fd 48 1b c8 01 	vextractf64x4 ymm0,zmm1,0x1
+  4064f0:	62 d1 7c 48 10 34 03 	vmovups zmm6,ZMMWORD PTR [r11+rax*1]
+  4064f7:	62 d1 4c 48 5c 0c 01 	vsubps zmm1,zmm6,ZMMWORD PTR [r9+rax*1]
+  406502:	62 f1 74 48 59 c9    	vmulps zmm1,zmm1,zmm1
+  406524:	62 f3 fd 48 3b c9 01 	vextracti64x4 ymm1,zmm1,0x1
+  406751:	c4 e2 55 92 14 86    	vgatherdps ymm2,DWORD PTR [rsi+ymm0*4],ymm5
+  4067f6:	62 f1 7d 48 6f 1d 40 	vmovdqa32 zmm3,ZMMWORD PTR [rip+0x172840]        # 579040 <_IO_stdin_used+0x40>
+  406808:	62 f2 7d 48 31 44 0f 	vpmovzxbd zmm0,XMMWORD PTR [rdi+rcx*1-0x10]
+  406810:	62 d2 7d 48 7c d0    	vpbroadcastd zmm2,r8d
+  406828:	62 f1 7d 48 fe c3    	vpaddd zmm0,zmm0,zmm3
+  40682e:	62 f1 7d 48 fe c2    	vpaddd zmm0,zmm0,zmm2
+  406834:	62 f2 7d 4a 92 14 86 	vgatherdps zmm2{k2},DWORD PTR [rsi+zmm0*4]
+  40683b:	62 f1 74 48 58 ca    	vaddps zmm1,zmm1,zmm2
+  406846:	62 f3 fd 48 1b c8 01 	vextractf64x4 ymm0,zmm1,0x1
+  4fd62f:	62 f1 7c 48 10 06    	vmovups zmm0,ZMMWORD PTR [rsi]
+  4fd635:	62 f1 7c 48 10 4e 01 	vmovups zmm1,ZMMWORD PTR [rsi+0x40]

@@ -1,0 +1,76 @@
+PUBLICATION REFERENCE RUN, TUNED MULTI-ACCUMULATOR KERNELS
+
+HOST
+Linux va-shared-pool-18-0 6.12.103-127.188.amzn2023.x86_64 #1 SMP PREEMPT_DYNAMIC Tue Aug 25 15:42:53 UTC 2026 x86_64 Linux
+model name	: Intel(R) Xeon(R) Platinum 8375C CPU @ 2.90GHz
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch cpuid_fault ssbd ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves wbnoinvd ida arat avx512vbmi pku ospke avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg tme avx512_vpopcntdq rdpid md_clear flush_l1d arch_capabilities
+logical CPUs: 8
+AWS instance type: r6id.2xlarge
+
+LOAD IMMEDIATELY BEFORE RUN
+0.17 0.20 0.23 (captured before correctness and timed runs)
+
+AFFINITY
+kernel_bench invoked with logical CPU argument 3; sched_setaffinity succeeded.
+cpu3 siblings: 3,7
+cpu7 siblings: 3,7
+
+METHOD
+10 repetitions; 3,000,000 operations per case per repetition; deterministic warmed data.
+Dense L2 uses four independent accumulators in scalar, AVX2, and AVX-512.
+Scalar function compiled with GCC no-tree-vectorize optimization attribute.
+
+COMPILER
+c++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0
+Copyright (C) 2021 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+
+BINARY SHA256
+6a0e2b89f65e3961a059a9d13e9fbbbcbd0e49a4fc7d08d1e3b536cf10bf7fe4  /tmp/vectoramp-kernel-bench-review-static
+ecb439af80af07e5e1cb6b37e0e2872ad3b192add4425d8077972bde244c07a4  /tmp/vectoramp-kernel-tests-review-static
+
+DISASSEMBLY PROOF: SCALAR FOUR-CHAIN LOOP
+  406bf8:	f3 0f 10 20          	movss  xmm4,DWORD PTR [rax]
+  406bfc:	f3 0f 10 58 04       	movss  xmm3,DWORD PTR [rax+0x4]
+  406c09:	f3 0f 5c 61 f0       	subss  xmm4,DWORD PTR [rcx-0x10]
+  406c0e:	f3 0f 5c 59 f4       	subss  xmm3,DWORD PTR [rcx-0xc]
+  406c13:	f3 0f 10 50 f8       	movss  xmm2,DWORD PTR [rax-0x8]
+  406c18:	f3 0f 10 48 fc       	movss  xmm1,DWORD PTR [rax-0x4]
+  406c1d:	f3 0f 5c 51 f8       	subss  xmm2,DWORD PTR [rcx-0x8]
+  406c22:	f3 0f 5c 49 fc       	subss  xmm1,DWORD PTR [rcx-0x4]
+  406c27:	f3 0f 59 e4          	mulss  xmm4,xmm4
+  406c2b:	f3 0f 59 db          	mulss  xmm3,xmm3
+  406c2f:	f3 0f 59 d2          	mulss  xmm2,xmm2
+  406c33:	f3 0f 59 c9          	mulss  xmm1,xmm1
+  406c37:	f3 0f 58 c4          	addss  xmm0,xmm4
+  406c3b:	f3 0f 58 fb          	addss  xmm7,xmm3
+  406c3f:	f3 0f 58 f2          	addss  xmm6,xmm2
+  406c43:	f3 0f 58 e9          	addss  xmm5,xmm1
+  406c4c:	f3 0f 58 c7          	addss  xmm0,xmm7
+  406c50:	f3 0f 58 f5          	addss  xmm6,xmm5
+  406c5c:	f3 0f 58 c6          	addss  xmm0,xmm6
+  406c68:	f3 0f 10 0c 87       	movss  xmm1,DWORD PTR [rdi+rax*4]
+  406c6d:	f3 0f 5c 0c 86       	subss  xmm1,DWORD PTR [rsi+rax*4]
+  406c76:	f3 0f 59 c9          	mulss  xmm1,xmm1
+  406c7a:	f3 0f 58 c1          	addss  xmm0,xmm1
+  406d13:	f3 0f 58 04 8e       	addss  xmm0,DWORD PTR [rsi+rcx*4]
+
+DISASSEMBLY PROOF: AVX2 AND AVX-512 FOUR-ACCUMULATOR FMAS
+  40638f:	c4 e2 5d b8 c4       	vfmadd231ps ymm0,ymm4,ymm4
+  406394:	c4 e2 65 b8 f3       	vfmadd231ps ymm6,ymm3,ymm3
+  406399:	c4 e2 6d b8 ea       	vfmadd231ps ymm5,ymm2,ymm2
+  40639e:	c4 e2 75 b8 f9       	vfmadd231ps ymm7,ymm1,ymm1
+  4063dd:	c4 e2 75 b8 c1       	vfmadd231ps ymm0,ymm1,ymm1
+  406654:	62 f2 5d 48 b8 c4    	vfmadd231ps zmm0,zmm4,zmm4
+  40665a:	62 f2 6d 48 b8 ea    	vfmadd231ps zmm5,zmm2,zmm2
+  406660:	62 f2 65 48 b8 f3    	vfmadd231ps zmm6,zmm3,zmm3
+  406666:	62 f2 75 48 b8 f9    	vfmadd231ps zmm7,zmm1,zmm1
+  4066a8:	62 f2 75 48 b8 c1    	vfmadd231ps zmm0,zmm1,zmm1
+
+DISASSEMBLY PROOF: AVX-512 PQ INDEXING AND GATHER
+  406a68:	62 f2 7d 48 31 44 0f 	vpmovzxbd zmm0,XMMWORD PTR [rdi+rcx*1-0x10]
+  406a88:	62 f1 7d 48 fe c3    	vpaddd zmm0,zmm0,zmm3
+  406a8e:	62 f1 7d 48 fe c2    	vpaddd zmm0,zmm0,zmm2
+  406a94:	62 f2 7d 4a 92 14 86 	vgatherdps zmm2{k2},DWORD PTR [rsi+zmm0*4]
