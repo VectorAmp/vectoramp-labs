@@ -1,0 +1,21 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  avx512-vector-distance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S articles/avx512-vector-distance -B articles/avx512-vector-distance/build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build articles/avx512-vector-distance/build --parallel
+      - name: Test
+        run: ctest --test-dir articles/avx512-vector-distance/build --output-on-failure
+
