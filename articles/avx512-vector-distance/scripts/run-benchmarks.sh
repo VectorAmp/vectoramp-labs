@@ -21,8 +21,13 @@ metadata_file="${results_dir}/environment-${timestamp}.txt"
   cmake --version
 } > "${metadata_file}"
 
-"${build_dir}/kernel_bench" "${1:-1000000}" | tee "${result_file}"
+iterations="${1:-1000000}"
+cpu="${2:-}"
+if [[ -n "${cpu}" ]]; then
+  "${build_dir}/kernel_bench" "${iterations}" "${cpu}" | tee "${result_file}"
+else
+  "${build_dir}/kernel_bench" "${iterations}" | tee "${result_file}"
+fi
 
 echo "Results: ${result_file}"
 echo "Environment: ${metadata_file}"
-

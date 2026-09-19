@@ -2,11 +2,11 @@
 
 ## Publication reference run
 
-The current reference result is the Intel Ice Lake run captured on 2026-09-19:
+The current reference result is the tuned Intel Ice Lake run captured on 2026-09-19:
 
-- `benchmark-intel-xeon-8375c-20260919-runs.csv`: all 180 timed cases from ten repetitions;
-- `benchmark-intel-xeon-8375c-20260919-summary.csv`: median, minimum, maximum, mean, standard deviation, and median throughput;
-- `environment-intel-xeon-8375c-20260919.txt`: host, CPU flags, topology, toolchain, binary hashes, and disassembly evidence.
+- `benchmark-intel-xeon-8375c-20260919-tuned-runs.csv`: all 180 timed cases from ten repetitions;
+- `benchmark-intel-xeon-8375c-20260919-tuned-summary.csv`: median, minimum, maximum, mean, standard deviation, and median throughput;
+- `environment-intel-xeon-8375c-20260919-tuned.txt`: host, CPU flags, topology, toolchain, binary hashes, and disassembly evidence.
 
 ### Method
 
@@ -20,7 +20,8 @@ The current reference result is the Intel Ice Lake run captured on 2026-09-19:
 - Operations per case per repetition: 3,000,000
 - Working set: deterministic synthetic data, warmed before timing
 - Compiler: GCC 11.4.0, `-O3`, C++20
-- Benchmark commit: `210e632479664bdabaa9397d548a2955b990c19b`
+- Dense L2 accumulation: four independent accumulators in scalar, AVX2, and AVX-512
+- Scalar vectorization: explicitly disabled for the scalar reference function
 
 The benchmark skips unsupported instruction-set variants. AVX-512 rows were
 emitted only after runtime detection confirmed `avx512f` and `avx512bw`.
@@ -32,12 +33,12 @@ instructions.
 
 | Kernel | Size | Scalar | AVX2 | AVX-512 | AVX-512 vs scalar |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Squared L2 | 256 dimensions | 244.475 ns | 30.262 ns | 29.755 ns | 8.22x |
-| Squared L2 | 768 dimensions | 854.179 ns | 105.429 ns | 104.569 ns | 8.17x |
-| Squared L2 | 1,536 dimensions | 1,766.655 ns | 213.609 ns | 206.214 ns | 8.57x |
-| PQ ADC | 16 subquantizers | 9.640 ns | 7.138 ns | 5.505 ns | 1.75x |
-| PQ ADC | 32 subquantizers | 20.974 ns | 10.976 ns | 10.070 ns | 2.08x |
-| PQ ADC | 64 subquantizers | 49.922 ns | 19.823 ns | 19.109 ns | 2.61x |
+| Squared L2 | 256 dimensions | 113.609 ns | 21.038 ns | 30.958 ns | 3.67x |
+| Squared L2 | 768 dimensions | 335.018 ns | 88.241 ns | 108.308 ns | 3.09x |
+| Squared L2 | 1,536 dimensions | 669.547 ns | 176.892 ns | 217.820 ns | 3.07x |
+| PQ ADC | 16 subquantizers | 10.613 ns | 7.155 ns | 5.481 ns | 1.94x |
+| PQ ADC | 32 subquantizers | 20.731 ns | 10.901 ns | 10.056 ns | 2.06x |
+| PQ ADC | 64 subquantizers | 49.759 ns | 19.803 ns | 19.073 ns | 2.61x |
 
 ### Limitations
 
@@ -45,11 +46,14 @@ This was a process-pinned run on a shared Kubernetes development node. The node
 was nearly idle immediately before measurement, and run-to-run variance was
 low, but sibling CPU 7 was not isolated from the scheduler. The container did
 not expose a `perf` binary, so this result does not include hardware performance
-counters. Treat the numbers as reproducible kernel measurements, not a claim
-about complete VectorAmp query latency.
+counters. AVX2 beat AVX-512 in the tuned dense-L2 cases on this host, while
+AVX-512 retained a small advantage for PQ ADC. Treat the numbers as
+reproducible kernel measurements, not a claim about complete VectorAmp query
+latency or a universal ranking of vector widths.
 
 ## Earlier exploratory run
 
-The timestamped `benchmark-20260919T182813Z.csv` and matching environment file
-are retained as an exploratory AMD EPYC VM run. They are not the publication
-reference result.
+The untuned Intel files without `-tuned` preserve the original single-
+accumulator run. The timestamped `benchmark-20260919T182813Z.csv` and matching
+environment file preserve the exploratory AMD EPYC VM run. Neither is the
+publication reference result.

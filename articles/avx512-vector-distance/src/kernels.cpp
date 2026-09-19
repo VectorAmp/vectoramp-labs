@@ -19,14 +19,34 @@ float l2_squared_avx2(
     const float* lhs,
     const float* rhs,
     std::size_t dimensions) noexcept {
-  __m256 accumulator = _mm256_setzero_ps();
+  __m256 accumulator0 = _mm256_setzero_ps();
+  __m256 accumulator1 = _mm256_setzero_ps();
+  __m256 accumulator2 = _mm256_setzero_ps();
+  __m256 accumulator3 = _mm256_setzero_ps();
   std::size_t i = 0;
-  for (; i + 8 <= dimensions; i += 8) {
-    const __m256 a = _mm256_loadu_ps(lhs + i);
-    const __m256 b = _mm256_loadu_ps(rhs + i);
-    const __m256 delta = _mm256_sub_ps(a, b);
-    accumulator = _mm256_fmadd_ps(delta, delta, accumulator);
+  for (; i + 32 <= dimensions; i += 32) {
+    const __m256 delta0 = _mm256_sub_ps(
+        _mm256_loadu_ps(lhs + i), _mm256_loadu_ps(rhs + i));
+    const __m256 delta1 = _mm256_sub_ps(
+        _mm256_loadu_ps(lhs + i + 8), _mm256_loadu_ps(rhs + i + 8));
+    const __m256 delta2 = _mm256_sub_ps(
+        _mm256_loadu_ps(lhs + i + 16), _mm256_loadu_ps(rhs + i + 16));
+    const __m256 delta3 = _mm256_sub_ps(
+        _mm256_loadu_ps(lhs + i + 24), _mm256_loadu_ps(rhs + i + 24));
+    accumulator0 = _mm256_fmadd_ps(delta0, delta0, accumulator0);
+    accumulator1 = _mm256_fmadd_ps(delta1, delta1, accumulator1);
+    accumulator2 = _mm256_fmadd_ps(delta2, delta2, accumulator2);
+    accumulator3 = _mm256_fmadd_ps(delta3, delta3, accumulator3);
   }
+  for (; i + 8 <= dimensions; i += 8) {
+    const __m256 delta = _mm256_sub_ps(
+        _mm256_loadu_ps(lhs + i), _mm256_loadu_ps(rhs + i));
+    accumulator0 = _mm256_fmadd_ps(delta, delta, accumulator0);
+  }
+
+  const __m256 accumulator = _mm256_add_ps(
+      _mm256_add_ps(accumulator0, accumulator1),
+      _mm256_add_ps(accumulator2, accumulator3));
 
   alignas(32) std::array<float, 8> lanes{};
   _mm256_store_ps(lanes.data(), accumulator);
@@ -46,15 +66,34 @@ float l2_squared_avx512(
     const float* lhs,
     const float* rhs,
     std::size_t dimensions) noexcept {
-  __m512 accumulator = _mm512_setzero_ps();
+  __m512 accumulator0 = _mm512_setzero_ps();
+  __m512 accumulator1 = _mm512_setzero_ps();
+  __m512 accumulator2 = _mm512_setzero_ps();
+  __m512 accumulator3 = _mm512_setzero_ps();
   std::size_t i = 0;
+  for (; i + 64 <= dimensions; i += 64) {
+    const __m512 delta0 = _mm512_sub_ps(
+        _mm512_loadu_ps(lhs + i), _mm512_loadu_ps(rhs + i));
+    const __m512 delta1 = _mm512_sub_ps(
+        _mm512_loadu_ps(lhs + i + 16), _mm512_loadu_ps(rhs + i + 16));
+    const __m512 delta2 = _mm512_sub_ps(
+        _mm512_loadu_ps(lhs + i + 32), _mm512_loadu_ps(rhs + i + 32));
+    const __m512 delta3 = _mm512_sub_ps(
+        _mm512_loadu_ps(lhs + i + 48), _mm512_loadu_ps(rhs + i + 48));
+    accumulator0 = _mm512_fmadd_ps(delta0, delta0, accumulator0);
+    accumulator1 = _mm512_fmadd_ps(delta1, delta1, accumulator1);
+    accumulator2 = _mm512_fmadd_ps(delta2, delta2, accumulator2);
+    accumulator3 = _mm512_fmadd_ps(delta3, delta3, accumulator3);
+  }
   for (; i + 16 <= dimensions; i += 16) {
-    const __m512 a = _mm512_loadu_ps(lhs + i);
-    const __m512 b = _mm512_loadu_ps(rhs + i);
-    const __m512 delta = _mm512_sub_ps(a, b);
-    accumulator = _mm512_fmadd_ps(delta, delta, accumulator);
+    const __m512 delta = _mm512_sub_ps(
+        _mm512_loadu_ps(lhs + i), _mm512_loadu_ps(rhs + i));
+    accumulator0 = _mm512_fmadd_ps(delta, delta, accumulator0);
   }
 
+  const __m512 accumulator = _mm512_add_ps(
+      _mm512_add_ps(accumulator0, accumulator1),
+      _mm512_add_ps(accumulator2, accumulator3));
   float sum = _mm512_reduce_add_ps(accumulator);
   for (; i < dimensions; ++i) {
     const float delta = lhs[i] - rhs[i];
@@ -160,12 +199,30 @@ std::string_view isa_name(const Isa isa) noexcept {
   return "unknown";
 }
 
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((optimize("no-tree-vectorize")))
+#endif
 float l2_squared_scalar(
     const float* lhs,
     const float* rhs,
     const std::size_t dimensions) noexcept {
-  float sum = 0.0F;
-  for (std::size_t i = 0; i < dimensions; ++i) {
+  float sum0 = 0.0F;
+  float sum1 = 0.0F;
+  float sum2 = 0.0F;
+  float sum3 = 0.0F;
+  std::size_t i = 0;
+  for (; i + 4 <= dimensions; i += 4) {
+    const float delta0 = lhs[i] - rhs[i];
+    const float delta1 = lhs[i + 1] - rhs[i + 1];
+    const float delta2 = lhs[i + 2] - rhs[i + 2];
+    const float delta3 = lhs[i + 3] - rhs[i + 3];
+    sum0 += delta0 * delta0;
+    sum1 += delta1 * delta1;
+    sum2 += delta2 * delta2;
+    sum3 += delta3 * delta3;
+  }
+  float sum = (sum0 + sum1) + (sum2 + sum3);
+  for (; i < dimensions; ++i) {
     const float delta = lhs[i] - rhs[i];
     sum += delta * delta;
   }
@@ -222,4 +279,3 @@ float pq_adc(
 }
 
 }  // namespace vectoramp::labs
-

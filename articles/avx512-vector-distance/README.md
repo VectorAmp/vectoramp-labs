@@ -59,6 +59,12 @@ Pass an optional iteration count for a shorter or longer run:
 ./scripts/run-benchmarks.sh 5000000
 ```
 
+On Linux, pass a logical CPU as the second argument to pin the process:
+
+```bash
+./scripts/run-benchmarks.sh 5000000 3
+```
+
 The script records:
 
 - raw CSV measurements under `results/`;
@@ -87,12 +93,15 @@ Selected median results:
 
 | Kernel | Problem size | Scalar | AVX2 | AVX-512 | AVX-512 vs scalar |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Squared L2 | 1,536 dimensions | 1,766.655 ns | 213.609 ns | 206.214 ns | 8.57x |
-| PQ ADC | 64 subquantizers | 49.922 ns | 19.823 ns | 19.109 ns | 2.61x |
+| Squared L2 | 1,536 dimensions | 669.547 ns | 176.892 ns | 217.820 ns | 3.07x |
+| PQ ADC | 64 subquantizers | 49.759 ns | 19.803 ns | 19.073 ns | 2.61x |
 
 The raw repeats, aggregate statistics, host metadata, binary hashes, and
 disassembly evidence are under [`results/`](results/). These are kernel
 microbenchmarks on a shared development node, not end-to-end database results.
+The dense implementations use four independent accumulators. On this host,
+AVX2 beat AVX-512 for tuned dense L2, while AVX-512 remained slightly faster
+for PQ ADC. Wider is a workload-dependent choice, not an automatic win.
 
 ## Inspect generated assembly
 

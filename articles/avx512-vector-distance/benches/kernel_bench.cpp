@@ -1,13 +1,19 @@
 #include "vectoramp_labs/kernels.hpp"
 
 #include <chrono>
+#include <cerrno>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <random>
 #include <string_view>
 #include <vector>
+
+#if defined(__linux__)
+#include <sched.h>
+#endif
 
 namespace {
 
@@ -45,6 +51,23 @@ void emit_row(
             << std::setprecision(2) << (1.0e9 / nanoseconds) << '\n';
 }
 
+bool pin_to_cpu(const int cpu) {
+#if defined(__linux__)
+  cpu_set_t affinity;
+  CPU_ZERO(&affinity);
+  CPU_SET(cpu, &affinity);
+  if (sched_setaffinity(0, sizeof(affinity), &affinity) != 0) {
+    std::cerr << "Unable to pin benchmark to CPU " << cpu << ": "
+              << std::strerror(errno) << '\n';
+    return false;
+  }
+  return true;
+#else
+  std::cerr << "CPU affinity is supported only on Linux in this lab.\n";
+  return false;
+#endif
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -53,6 +76,9 @@ int main(int argc, char** argv) {
   const std::size_t iterations = argc > 1
       ? static_cast<std::size_t>(std::strtoull(argv[1], nullptr, 10))
       : 1'000'000;
+  if (argc > 2 && !pin_to_cpu(std::atoi(argv[2]))) {
+    return 2;
+  }
 
   std::mt19937 generator(42);
   std::uniform_real_distribution<float> floats(-1.0F, 1.0F);
@@ -115,4 +141,3 @@ int main(int argc, char** argv) {
   }
   return 0;
 }
-
