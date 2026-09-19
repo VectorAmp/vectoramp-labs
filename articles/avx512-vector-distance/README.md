@@ -76,6 +76,24 @@ virtualization, thermal state, and surrounding workload. AVX-512 gather does
 not remove cache-miss latency; it is most effective when the distance tables
 remain cache-resident.
 
+## Reference Intel run
+
+The publication reference run used an AWS `r6id.2xlarge` backed by an Intel
+Xeon Platinum 8375C (Ice Lake). The process was pinned to logical CPU 3, the
+correctness suite passed on the host, and every case was measured ten times at
+3,000,000 operations per run.
+
+Selected median results:
+
+| Kernel | Problem size | Scalar | AVX2 | AVX-512 | AVX-512 vs scalar |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Squared L2 | 1,536 dimensions | 1,766.655 ns | 213.609 ns | 206.214 ns | 8.57x |
+| PQ ADC | 64 subquantizers | 49.922 ns | 19.823 ns | 19.109 ns | 2.61x |
+
+The raw repeats, aggregate statistics, host metadata, binary hashes, and
+disassembly evidence are under [`results/`](results/). These are kernel
+microbenchmarks on a shared development node, not end-to-end database results.
+
 ## Inspect generated assembly
 
 ```bash
@@ -84,4 +102,3 @@ objdump -d -M intel --demangle build/libvector_distance.a | less
 
 Useful instructions to locate include `vsubps`, `vfmadd231ps`, `vpmovzxbd`,
 `vpaddd`, and `vgatherdps`.
-
